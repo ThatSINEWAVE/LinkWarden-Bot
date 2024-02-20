@@ -1,7 +1,8 @@
 
 # Discord Link Checker - BOT
 
-This is a simple Discord bot i wrote for personal use in my own servers and others that allows the staff team to check links sent by users within Discord
+This is a simple Discord bot i wrote for personal use in my own servers and others that allows the staff team to check links sent by users within Discord.
+The bot uses VirusTotal API to run the checks for each link that it gets
 
 
 

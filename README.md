@@ -1,48 +1,84 @@
 # Discord Link Checker Bot
-This Discord bot, designed for personal and community use, enhances server security by scrutinizing links shared within Discord channels. Leveraging the VirusTotal API, it provides real-time analysis to help maintain a safe online environment for members.
+
+This Discord bot, designed for personal and community use, enhances server security by scrutinizing links shared within Discord channels. It leverages the VirusTotal API, WHOIS lookups, and urlscan.io scans to provide comprehensive real-time analysis, helping maintain a safe online environment for members.
 
 ## Features
-- Real-time Link Analysis: Automatically checks links shared in Discord against the VirusTotal database.
-- User-friendly Reports: Generates easy-to-understand reports on link safety.
-- Flexible Checking Modes: Offers both a concise overview and detailed reports to suit different user preferences.
+
+- **Real-time Link Analysis**: Automatically checks links shared in Discord against the VirusTotal database, performs WHOIS lookups, and submits URLs to urlscan.io for scanning.
+- **Comprehensive Security Reports**: Generates detailed reports including VirusTotal's analysis, domain registration details from WHOIS, and web page snapshots and security insights from urlscan.io.
+- **Flexible Checking Modes**: Offers both a concise overview (Simple Mode) and detailed reports (Detailed Mode) to suit different user preferences.
 
 ## Getting Started
-Before you can use the bot, you'll need to set it up with your Discord server and configure it with your VirusTotal API key.
+
+Before you can use the bot, you'll need to set it up with your Discord server and configure it with your API keys.
 
 ### Prerequisites
+
 - A Discord account with administrative privileges on your server.
-- A VirusTotal API key (available from VirusTotal).
+- Python 3.6 or higher.
+- API keys for VirusTotal and urlscan.io (available from their respective websites).
 
 ### Installation
-- Clone this repository to your local machine.
-- Install the required dependencies.
-- Configure your file with your Discord Bot Token and VirusTotal API Key.
-- Run the bot
 
+1. Clone this repository to your local machine.
+2. Install the required dependencies by running `pip install -r requirements.txt`.
+3. Create a `config.py` file in the same directory as your bot script, and add your Discord Bot Token, VirusTotal API Key, urlscan.io API Key, and guild ID(s) in the following format:
+
+```python
+TOKEN = 'your_discord_bot_token_here'
+VIRUSTOTAL_API_KEY = 'your_virustotal_api_key_here'
+URLSCAN_API_KEY = 'your_urlscan_io_api_key_here'
+guild_ids = [your_guild_id_here]
+```
+4. Run `main.py`
+
+## Dependencies
+
+This bot requires the following Python packages:
+- discord.py
+- requests
+- python-whois
+These can be installed using pip:
+
+```python
+pip install discord.py requests python-whois
+```
+
+Or you can install them using the requirements.txt file.
+
+```python
+by running `pip install -r requirements.txt`
+```
 ## Usage
-The bot is straightforward to use with a simple command structure. Currently, it supports the following command:
+
+The bot is straightforward to use with a simple command structure. It supports the following command:
 
 ### Command Structure
-/checklink [LINK] [MODE]
 
-- Simple Mode: Provides a user-friendly summary.
-- /checklink https://github.com/ simple
+`/checklink [LINK] [MODE]`
 
-- Detailed Mode: Offers an exhaustive report with vendor-specific ratings.
-- /checklink https://github.com/ detailed
+- **Simple Mode**: Provides a user-friendly summary including the safety status of the link, WHOIS domain registration summary, and a link to the urlscan.io report.
 
-## Modes Explained
-- SIMPLE: Displays a concise embed with the top 10 warnings and additional information.
-- DETAILED: Presents a comprehensive report, marking each vendor with a color-coded dot as per the following legend below
-  
-### Status	Dots
-- Harmless	🟢
-- Malicious	🔴
-- Suspicious	🟡
-- Undetected	⚪
+`/checklink https://example.com simple`
+
+- **Detailed Mode**: Offers an exhaustive report with vendor-specific ratings from VirusTotal, detailed WHOIS information, and a comprehensive security report from urlscan.io.
+
+`/checklink https://example.com detailed`
+
+### Modes Explained
+- **SIMPLE**: Displays a concise embed with the top 10 warnings from VirusTotal, a summary of WHOIS information, and a link to the urlscan.io report.
+- **DETAILED**: Presents a comprehensive report, marking each vendor with a color-coded dot as per the legend below, along with detailed WHOIS information and a urlscan.io security report.
+
+## Status Dots Legend
+
+- Harmless: 🟢
+- Malicious: 🔴
+- Suspicious: 🟡
+- Undetected: ⚪
 
 ## Contributing
-Your contributions are welcome! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to fork this repository and submit a pull request.
+- Your contributions are welcome! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to fork this repository and submit a pull request.
 
 ## License
+
 This project is open-sourced under the MIT License.

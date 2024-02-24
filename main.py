@@ -3,7 +3,7 @@ import requests
 from discord.ext import commands
 from discord.commands import Option
 import time
-import whois
+import whois  # Import the whois package
 from config import TOKEN, VIRUSTOTAL_API_KEY, URLSCAN_API_KEY, guild_ids
 
 bot = commands.Bot(command_prefix="/", intents=discord.Intents.default())
@@ -87,8 +87,11 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
         # Submit the URL to urlscan.io and wait for the scan to complete
         urlscan_scan_uuid = submit_to_urlscan(link)
         urlscan_data = None
+        screenshot_url = None
         if urlscan_scan_uuid:
             urlscan_data = get_urlscan_result(urlscan_scan_uuid)
+            if urlscan_data:
+                screenshot_url = urlscan_data.get('task', {}).get('screenshotURL')
 
         if vt_report:
             attributes = vt_report['data']['attributes']
@@ -110,46 +113,37 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
                 detailed_result = f"{emoji} {vendor}: {category} ({result.get('result', 'No specific result')})"
                 detailed_results.append(detailed_result)
 
+            embed = discord.Embed(title=f"Link Security Report - {mode.capitalize()} Mode", description=f"Detailed results for {link}:", color=0xFF0000 if malicious_count > 0 else 0x00FF00)
+            embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
+
+            if urlscan_data:
+                urlscan_info = f"URLScan.io Report: [View Report](https://urlscan.io/result/{urlscan_scan_uuid}/)"
+                embed.add_field(name="Urlscan.io Analysis", value=urlscan_info, inline=False)
+                if screenshot_url:
+                    embed.set_image(url=screenshot_url)  # Add the screenshot from urlscan.io
+
             if mode == "simple":
                 summary_text = "🔴 Caution: This link may be harmful." if malicious_count > 0 else "🟢 This link appears to be safe."
-                embed_color = 0xFF0000 if malicious_count > 0 else 0x00FF00
-                embed = discord.Embed(title="Link Security Report - Simple Mode", description=f"{summary_text}\n\nDetailed results for {link}:", color=embed_color)
-
+                embed.description = f"{summary_text}\n\nDetailed results for {link}:"
                 if malicious_count > 0:
                     embed.add_field(name="⚠️ Malicious Detections (VirusTotal)", value=str(malicious_count), inline=False)
-
                 warnings = [result for result in detailed_results if '🔴' in result or '🟡' in result][:10]
                 if warnings:
                     embed.add_field(name="🚨 VirusTotal Warnings (Top 10)", value="\n".join(warnings), inline=False)
-
-                embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
-
-                if urlscan_data:
-                    urlscan_info = f"URLScan.io Report: [View Report](https://urlscan.io/result/{urlscan_scan_uuid}/)"
-                    embed.add_field(name="Urlscan.io Analysis", value=urlscan_info, inline=False)
-
-                embed.set_footer(text="This is a simplified summary. For full details, use the 'detailed' mode. Always exercise caution.")
-            else:
-                embed = discord.Embed(title="Link Security Report - Detailed Mode", description=f"Detailed results for {link}:", color=0x00ff00)
+            else:  # Detailed mode
                 embed.add_field(name="Malicious Detections (VirusTotal)", value=str(stats.get('malicious', 'N/A')), inline=True)
                 embed.add_field(name="Harmless Detections (VirusTotal)", value=str(stats.get('harmless', 'N/A')), inline=True)
                 embed.add_field(name="Suspicious Detections (VirusTotal)", value=str(stats.get('suspicious', 'N/A')), inline=True)
                 embed.add_field(name="Undetected (VirusTotal)", value=str(stats.get('undetected', 'N/A')), inline=True)
 
-                if detailed_results:
-                    for i in range(0, len(detailed_results), 10):
-                        embed.add_field(name=f"VirusTotal Detailed Results (Sample {i // 10 + 1})", value="\n".join(detailed_results[i:i + 10]), inline=False)
-
-                embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
-
-                if urlscan_data:
-                    urlscan_info = f"URLScan.io Report: [View Report](https://urlscan.io/result/{urlscan_scan_uuid}/)"
-                    embed.add_field(name="Urlscan.io Analysis", value=urlscan_info, inline=False)
+                for i in range(0, len(detailed_results), 10):
+                    embed.add_field(name=f"VirusTotal Detailed Results (Sample {i // 10 + 1})", value="\n".join(detailed_results[i:i + 10]), inline=False)
 
             await ctx.followup.send(embed=embed)
         else:
             await ctx.followup.send("Failed to retrieve the analysis report from VirusTotal after several attempts.")
     else:
         await ctx.followup.send("Failed to submit the URL to VirusTotal for scanning.")
+
 
 bot.run(TOKEN)

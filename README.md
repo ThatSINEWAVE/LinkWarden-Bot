@@ -33,7 +33,7 @@ guild_ids = [your_guild_id_here]
 ```
 4. Run `main.py`
 
-## Dependencies
+### Dependencies
 
 This bot requires the following Python packages:
 - discord.py
@@ -70,7 +70,7 @@ The bot is straightforward to use with a simple command structure. It supports t
 - **SIMPLE**: Displays a concise embed with the top 10 warnings from VirusTotal, a summary of WHOIS information, and a link to the urlscan.io report.
 - **DETAILED**: Presents a comprehensive report, marking each vendor with a color-coded dot as per the legend below, along with detailed WHOIS information and a urlscan.io security report.
 
-## Status Dots Legend
+### Status Dots Legend
 
 - Harmless: 🟢
 - Malicious: 🔴

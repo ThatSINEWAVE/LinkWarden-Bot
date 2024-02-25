@@ -23,7 +23,7 @@ Before you can use the bot, you'll need to set it up with your Discord server an
 
 1. Clone this repository to your local machine.
 2. Install the required dependencies by running `pip install -r requirements.txt`.
-3. Create a `config.py` file in the same directory as your bot script, and add your Discord Bot Token, VirusTotal API Key, urlscan.io API Key, and guild ID(s) in the following format:
+3. Create a `config.py` file in the same directory as your bot script ( or use the premade 'config.py' file ), and add your Discord Bot Token, VirusTotal API Key, URLScan.io API Key, and guild ID(s) in the following format:
 
 ```python
 TOKEN = 'your_discord_bot_token_here'
@@ -79,7 +79,6 @@ The bot is straightforward to use with a simple command structure. It supports t
 
 ## Future Enhancements
 
-- **Modular Codebase**: Refactor the bot's codebase to split functionalities into individual modules, making the code easier to maintain and extend. This modular approach will facilitate adding new features and integrations seamlessly.
 - **Configurable Settings**: Introduce bot settings that server administrators can customize, such as enabling or disabling certain features and scanning modes. This flexibility will allow admins to tailor the bot's functionality to their server's specific needs and preferences.
 - **Dashboard Integration**: Develop a web-based dashboard that provides an overview of past scans, including detailed results and statistics. This dashboard will offer insights into the types of links shared within the server and the bot's effectiveness in identifying threats, enhancing transparency and trust in the bot's capabilities.
 - **Additional Scanning Integrations**: Expand the bot's scanning capabilities by integrating additional security tools and services. This expansion will provide more comprehensive coverage and protection against a wider range of online threats.

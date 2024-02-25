@@ -86,6 +86,7 @@ The bot is straightforward to use with a simple command structure. It supports t
 - **User Feedback System**: Implement a system for users to provide feedback on scan results, such as reporting false positives or missed threats. This feedback loop will help improve the bot's accuracy and effectiveness over time.
 
 ## Contributing
+
 - Your contributions are welcome! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to fork this repository and submit a pull request.
 
 ## License

@@ -48,7 +48,7 @@ pip install discord.py requests python-whois
 Or you can install them using the requirements.txt file.
 
 ```python
-by running `pip install -r requirements.txt`
+pip install -r requirements.txt
 ```
 ## Usage
 

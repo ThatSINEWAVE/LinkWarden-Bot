@@ -7,6 +7,7 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Real-time Link Analysis**: Automatically checks links shared in Discord against the VirusTotal database, performs WHOIS lookups, and submits URLs to urlscan.io for scanning.
 - **Comprehensive Security Reports**: Generates detailed reports including VirusTotal's analysis, domain registration details from WHOIS, and web page snapshots and security insights from urlscan.io.
 - **Flexible Checking Modes**: Offers both a concise overview (Simple Mode) and detailed reports (Detailed Mode) to suit different user preferences.
+- **Ease of use**: The bot will embed a screenshot of the link sent for checking right in the chat in both scanning modes, simple or detailed.
 
 ## Getting Started
 

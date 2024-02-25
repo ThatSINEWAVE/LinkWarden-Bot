@@ -77,6 +77,14 @@ The bot is straightforward to use with a simple command structure. It supports t
 - Suspicious: 🟡
 - Undetected: ⚪
 
+## Future Enhancements
+
+- **Modular Codebase**: Refactor the bot's codebase to split functionalities into individual modules, making the code easier to maintain and extend. This modular approach will facilitate adding new features and integrations seamlessly.
+- **Configurable Settings**: Introduce bot settings that server administrators can customize, such as enabling or disabling certain features and scanning modes. This flexibility will allow admins to tailor the bot's functionality to their server's specific needs and preferences.
+- **Dashboard Integration**: Develop a web-based dashboard that provides an overview of past scans, including detailed results and statistics. This dashboard will offer insights into the types of links shared within the server and the bot's effectiveness in identifying threats, enhancing transparency and trust in the bot's capabilities.
+- **Additional Scanning Integrations**: Expand the bot's scanning capabilities by integrating additional security tools and services. This expansion will provide more comprehensive coverage and protection against a wider range of online threats.
+- **User Feedback System**: Implement a system for users to provide feedback on scan results, such as reporting false positives or missed threats. This feedback loop will help improve the bot's accuracy and effectiveness over time.
+
 ## Contributing
 - Your contributions are welcome! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to fork this repository and submit a pull request.
 

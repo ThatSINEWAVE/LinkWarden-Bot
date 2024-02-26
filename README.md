@@ -90,6 +90,10 @@ The bot is straightforward to use with a simple command structure. It supports t
 
 - Your contributions are welcome! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to fork this repository and submit a pull request.
 
+### Contributors
+
+- **Cazaira** - helped refine and make the `trusted_domains.json` file stronger against false positives
+
 ## License
 
 This project is open-sourced under the MIT License.

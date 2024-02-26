@@ -8,6 +8,8 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Comprehensive Security Reports**: Generates detailed reports including VirusTotal's analysis, domain registration details from WHOIS, and web page snapshots and security insights from urlscan.io.
 - **Flexible Checking Modes**: Offers both a concise overview (Simple Mode) and detailed reports (Detailed Mode) to suit different user preferences.
 - **Ease of use**: The bot will embed a screenshot of the link sent for checking right in the chat in both scanning modes, simple or detailed.
+- **Automatic Link Scans**: The bot will look for links sent across the server and scan them automatically if they are not from a trusted domain.
+- **Customizable Trusted Domain List** - With the addition of `trusted_domains.json` you can customize what domains should be scanned.
 
 ## Getting Started
 
@@ -23,13 +25,14 @@ Before you can use the bot, you'll need to set it up with your Discord server an
 
 1. Clone this repository to your local machine.
 2. Install the required dependencies by running `pip install -r requirements.txt`.
-3. Create a `config.py` file in the same directory as your bot script ( or use the premade 'config.py' file ), and add your Discord Bot Token, VirusTotal API Key, URLScan.io API Key, and guild ID(s) in the following format:
+3. Create a `config.py` file in the same directory as your bot script ( or use the premade 'config.py' file ), and add your Discord Bot Token, VirusTotal API Key, URLScan.io API Key, guild ID(s) and the ID of the channel where you want the output of auto link scans to go in the following format:
 
 ```python
 TOKEN = 'your_discord_bot_token_here'
 VIRUSTOTAL_API_KEY = 'your_virustotal_api_key_here'
 URLSCAN_API_KEY = 'your_urlscan_io_api_key_here'
 guild_ids = [your_guild_id_here]
+SCAN_CHANNEL_ID = CHANNEL_WHERE_SCANS_SHOULD_GO
 ```
 4. Run `main.py`
 
@@ -79,7 +82,6 @@ The bot is straightforward to use with a simple command structure. It supports t
 
 ## Future Enhancements
 
-- **Configurable Settings**: Introduce bot settings that server administrators can customize, such as enabling or disabling certain features and scanning modes. This flexibility will allow admins to tailor the bot's functionality to their server's specific needs and preferences.
 - **Dashboard Integration**: Develop a web-based dashboard that provides an overview of past scans, including detailed results and statistics. This dashboard will offer insights into the types of links shared within the server and the bot's effectiveness in identifying threats, enhancing transparency and trust in the bot's capabilities.
 - **Additional Scanning Integrations**: Expand the bot's scanning capabilities by integrating additional security tools and services. This expansion will provide more comprehensive coverage and protection against a wider range of online threats.
 - **User Feedback System**: Implement a system for users to provide feedback on scan results, such as reporting false positives or missed threats. This feedback loop will help improve the bot's accuracy and effectiveness over time.

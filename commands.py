@@ -2,13 +2,16 @@ import discord
 import requests
 from discord.commands import Option
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY
-
+from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS  # Import ALLOWED_ROLE_IDS
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
+    # Check if the user has any of the allowed roles
+    if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
+        await ctx.respond("You do not have the required role to use this command.")
+        return
+
     # Send an initial message indicating that the analysis is starting
-    initial_response = await ctx.respond(f"🔍 Analysis in progress for `{link}` in **{mode} mode**. "
-                                         f"Please wait...")
+    initial_response = await ctx.respond(f"🔍 Analysis in progress for `{link}` in **{mode} mode**. Please wait...")
     initial_message = await initial_response.original_response()
 
     headers = {"x-apikey": VIRUSTOTAL_API_KEY}
@@ -79,19 +82,16 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
                     embed.add_field(name=f"VirusTotal Detailed Results (Sample {i // 10 + 1})", value="\n".join(detailed_results[i:i + 10]), inline=False)
 
             # Update the initial message to indicate that the analysis is complete
-            await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. "
-                                               f"Please check the message below.")
+            await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
 
             # Send the analysis report embed
             await ctx.followup.send(embed=embed)
         else:
             # In case the analysis report couldn't be retrieved, update the message accordingly
-            await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. "
-                                               f"Please try again later.")
+            await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
     else:
         # If the link could not be submitted to VirusTotal, update the initial message
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
-
 
 def setup_commands(bot, guild_ids):
     bot.slash_command(guild_ids=guild_ids, description="Checks the provided link for security threats.")(checklink)

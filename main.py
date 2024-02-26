@@ -42,7 +42,7 @@ async def on_message(message):
 
         if domain not in trusted_domains and url not in seen_links:
             print(f"Adding {url} to the queue.")  # Debug print
-            await link_queue.put(url)
+            await link_queue.put((url, message))  # Modify this line to include the message
             seen_links.add(url)  # Add the link to the set of seen links
         else:
             print(f"Skipping {url} as it's already seen or from a trusted domain.")  # Debug print
@@ -50,7 +50,7 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-async def checklink_scan(channel, link):
+async def checklink_scan(channel, link, message):  # Include the message parameter
     mode = "simple"  # Set mode to simple
 
     initial_message = await channel.send(f"🔍 Starting analysis for `{link}` in **{mode} mode**. Please wait...")
@@ -101,7 +101,7 @@ async def checklink_scan(channel, link):
 
             summary_text = "🔴 Caution: This link may be harmful." if malicious_count > 0 else "🟢 This link appears to be safe."
             embed = discord.Embed(title=f"Link Security Report - {mode.capitalize()} Mode",
-                                  description=f"{summary_text}\n\nDetailed results for `{link}`:",
+                                  description=f"{summary_text}\n\nDetailed results for `{link}`.\nOriginal message: [Click here]({message.jump_url})",
                                   color=0xFF0000 if malicious_count > 0 else 0x00FF00)
             embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
 
@@ -117,25 +117,23 @@ async def checklink_scan(channel, link):
                 if screenshot_url:
                     embed.set_image(url=screenshot_url)
 
-            await initial_message.edit(
-                content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
+            await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
             await channel.send(embed=embed)
         else:
-            await initial_message.edit(
-                content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
+            await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
     else:
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
 
 
 async def process_link_queue():
     while True:
-        link = await link_queue.get()
+        link, message = await link_queue.get()  # Modify this line to unpack message
 
         # Use SCAN_CHANNEL_ID from the config
         scan_channel = bot.get_channel(SCAN_CHANNEL_ID)
 
         if scan_channel:
-            await checklink_scan(scan_channel, link)
+            await checklink_scan(scan_channel, link, message)  # Pass the message here
 
             # Check the size of the queue after the scan is completed
             if link_queue.qsize() > 0:  # Check if there are more links in the queue
@@ -143,7 +141,7 @@ async def process_link_queue():
                 temp_list = list(link_queue._queue)
 
                 embed = discord.Embed(title="Current Link Queue", color=0x00FF00)
-                embed.description = "\n".join([f"{idx + 1}. `{item}`" for idx, item in enumerate(temp_list)])
+                embed.description = "\n".join([f"{idx + 1}. `{item[0]}`" for idx, item in enumerate(temp_list)])  # Modify to access link
 
                 # Add a note about the cooldown in the footer
                 embed.set_footer(text="Note: There is a 1-minute cooldown between scans.")

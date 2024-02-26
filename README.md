@@ -25,7 +25,7 @@ Before you can use the bot, you'll need to set it up with your Discord server an
 
 1. Clone this repository to your local machine.
 2. Install the required dependencies by running `pip install -r requirements.txt`.
-3. Create a `config.py` file in the same directory as your bot script ( or use the premade 'config.py' file ), and add your Discord Bot Token, VirusTotal API Key, URLScan.io API Key, guild ID(s) and the ID of the channel where you want the output of auto link scans to go in the following format:
+3. Create a `config.py` file in the same directory as your bot script ( or use the premade 'config.py' file ), and add your Discord Bot Token, VirusTotal API Key, URLScan.io API Key, guild ID(s), Moderator Role ID, and the ID of the channel where you want the output of auto link scans to go in the following format:
 
 ```python
 TOKEN = 'your_discord_bot_token_here'
@@ -33,6 +33,7 @@ VIRUSTOTAL_API_KEY = 'your_virustotal_api_key_here'
 URLSCAN_API_KEY = 'your_urlscan_io_api_key_here'
 guild_ids = [your_guild_id_here]
 SCAN_CHANNEL_ID = CHANNEL_WHERE_SCANS_SHOULD_GO
+ALLOWED_ROLE_IDS = [MOD_ROLE_ID_GOES_HERE]
 ```
 4. Run `main.py`
 

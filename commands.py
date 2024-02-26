@@ -6,7 +6,11 @@ from config import VIRUSTOTAL_API_KEY
 
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
-    await ctx.defer()
+    # Send an initial message indicating that the analysis is starting
+    initial_response = await ctx.respond(f"🔍 Analysis in progress for `{link}` in **{mode} mode**. "
+                                         f"Please wait...")
+    initial_message = await initial_response.original_response()
+
     headers = {"x-apikey": VIRUSTOTAL_API_KEY}
     params = {'url': link}
     vt_response = requests.post('https://www.virustotal.com/api/v3/urls', headers=headers, data=params)
@@ -17,10 +21,9 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
         analysis_url = f"https://www.virustotal.com/api/v3/analyses/{analysis_id}"
         vt_report = get_analysis_report(analysis_url, headers)
 
-        domain = link.split('/')[2]  # Extract the domain from the URL
-        whois_info = get_whois_info(domain)  # Perform the WHOIS lookup
+        domain = link.split('/')[2]
+        whois_info = get_whois_info(domain)
 
-        # Submit the URL to urlscan.io and wait for the scan to complete
         urlscan_scan_uuid = submit_to_urlscan(link)
         urlscan_data = None
         screenshot_url = None
@@ -49,14 +52,14 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
                 detailed_result = f"{emoji} {vendor}: {category} ({result.get('result', 'No specific result')})"
                 detailed_results.append(detailed_result)
 
-            embed = discord.Embed(title=f"Link Security Report - {mode.capitalize()} Mode", description=f"Detailed results for {link}:", color=0xFF0000 if malicious_count > 0 else 0x00FF00)
+            embed = discord.Embed(title=f"Link Security Report - {mode.capitalize()} Mode", description=f"Detailed results for `{link}`:", color=0xFF0000 if malicious_count > 0 else 0x00FF00)
             embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
 
             if urlscan_data:
                 urlscan_info = f"URLScan.io Report: [View Report](https://urlscan.io/result/{urlscan_scan_uuid}/)"
                 embed.add_field(name="Urlscan.io Analysis", value=urlscan_info, inline=False)
                 if screenshot_url:
-                    embed.set_image(url=screenshot_url)  # Add the screenshot from urlscan.io
+                    embed.set_image(url=screenshot_url)
 
             if mode == "simple":
                 summary_text = "🔴 Caution: This link may be harmful." if malicious_count > 0 else "🟢 This link appears to be safe."
@@ -75,11 +78,19 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
                 for i in range(0, len(detailed_results), 10):
                     embed.add_field(name=f"VirusTotal Detailed Results (Sample {i // 10 + 1})", value="\n".join(detailed_results[i:i + 10]), inline=False)
 
+            # Update the initial message to indicate that the analysis is complete
+            await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. "
+                                               f"Please check the message below.")
+
+            # Send the analysis report embed
             await ctx.followup.send(embed=embed)
         else:
-            await ctx.followup.send("Failed to retrieve the analysis report from VirusTotal after several attempts.")
+            # In case the analysis report couldn't be retrieved, update the message accordingly
+            await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. "
+                                               f"Please try again later.")
     else:
-        await ctx.followup.send("Failed to submit the URL to VirusTotal for scanning.")
+        # If the link could not be submitted to VirusTotal, update the initial message
+        await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
 
 
 def setup_commands(bot, guild_ids):

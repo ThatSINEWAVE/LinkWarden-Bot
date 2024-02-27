@@ -7,7 +7,7 @@ from discord.ext import commands
 from config import TOKEN, guild_ids
 from commands import setup_commands
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID
+from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID, ALLOWED_ROLE_IDS
 from urllib.parse import urlparse
 
 # Enable intents
@@ -18,11 +18,24 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 link_queue = asyncio.Queue()
-seen_links = set()
 
 # Load trusted domains
 with open('trusted_domains.json', 'r') as f:
     trusted_domains = json.load(f).get('trusted_domains', [])
+
+
+# Function to read and update seen links
+def update_seen_links(url):
+    try:
+        with open('seen_links.json', 'r') as file:
+            seen_links = json.load(file)
+    except FileNotFoundError:
+        seen_links = {}
+
+    seen_links[url] = seen_links.get(url, 0) + 1
+
+    with open('seen_links.json', 'w') as file:
+        json.dump(seen_links, file, indent=4)
 
 
 @bot.event
@@ -40,12 +53,12 @@ async def on_message(message):
         # Removing 'www.' prefix and port numbers from the domain
         domain = domain.replace('www.', '').split(':')[0]
 
-        if domain not in trusted_domains and url not in seen_links:
+        if domain not in trusted_domains:
             print(f"Adding {url} to the queue.")  # Debug print
             await link_queue.put((url, message))  # Modify this line to include the message
-            seen_links.add(url)  # Add the link to the set of seen links
+            update_seen_links(url)  # Update seen_links.json instead of adding to the set
         else:
-            print(f"Skipping {url} as it's already seen or from a trusted domain.")  # Debug print
+            print(f"Skipping {url} as it's from a trusted domain.")  # Debug print
 
     await bot.process_commands(message)
 
@@ -123,6 +136,45 @@ async def checklink_scan(channel, link, message):  # Include the message paramet
             await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
     else:
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
+
+
+@bot.slash_command(description="Check the history of scanned URLs", guild_ids=guild_ids)
+async def checkhistory(ctx):
+    # Check if the user has any of the allowed roles
+    if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
+        await ctx.respond("You do not have the required role to use this command.")
+        return
+
+    try:
+        # Load seen links from file
+        with open('seen_links.json', 'r') as file:
+            seen_links = json.load(file)
+
+        # Prepare an embed message for nicer presentation
+        embed = discord.Embed(title="Seen Links History",
+                              description="This is the list of links that have been checked along with how many times they were seen.",
+                              color=0x3498db)  # You can change the color
+
+        if seen_links:
+            # Limiting to show a maximum number of links due to embed field value limit
+            max_links_to_show = 25
+            links_shown = 0
+            for link, count in seen_links.items():
+                if links_shown < max_links_to_show:
+                    # Adding backticks around the link to make it unclickable
+                    embed.add_field(name=f"`{link}`", value=f"Seen {count} times", inline=False)
+                    links_shown += 1
+                else:
+                    break  # Stop adding more links to avoid hitting embed limits
+            if links_shown < len(seen_links):
+                embed.set_footer(text=f"and more links... (showing only the first {max_links_to_show})")
+        else:
+            embed.description = "No links have been seen yet."
+
+        # Send the embed message to the user
+        await ctx.respond(embed=embed)
+    except FileNotFoundError:
+        await ctx.respond("The seen links history is currently empty.")
 
 
 async def process_link_queue():

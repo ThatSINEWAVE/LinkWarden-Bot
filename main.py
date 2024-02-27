@@ -63,9 +63,17 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-async def checklink_scan(channel, link, message):  # Include the message parameter
-    mode = "simple"  # Set mode to simple
+async def checklink_scan(channel, link, message):
+    with open('seen_links.json', 'r') as file:
+        seen_links = json.load(file)
 
+    # Check if the link is in seen_links and prepare the seen_text
+    if link in seen_links:
+        seen_text = f"Link was seen {seen_links[link]} times"
+    else:
+        seen_text = "Link was seen for the first time"
+
+    mode = "simple"  # Set mode to simple
     initial_message = await channel.send(f"🔍 Starting analysis for `{link}` in **{mode} mode**. Please wait...")
 
     headers = {"x-apikey": VIRUSTOTAL_API_KEY}
@@ -114,7 +122,7 @@ async def checklink_scan(channel, link, message):  # Include the message paramet
 
             summary_text = "🔴 Caution: This link may be harmful." if malicious_count > 0 else "🟢 This link appears to be safe."
             embed = discord.Embed(title=f"Link Security Report - {mode.capitalize()} Mode",
-                                  description=f"{summary_text}\n\nDetailed results for `{link}`.\nOriginal message: [Click here]({message.jump_url})",
+                                  description=f"{summary_text}\n\nDetailed results for `{link}`.\nOriginal message: [Jump to message]({message.jump_url})\n{seen_text}",
                                   color=0xFF0000 if malicious_count > 0 else 0x00FF00)
             embed.add_field(name="WHOIS Information", value=whois_info, inline=False)
 
@@ -130,10 +138,12 @@ async def checklink_scan(channel, link, message):  # Include the message paramet
                 if screenshot_url:
                     embed.set_image(url=screenshot_url)
 
-            await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
+            await initial_message.edit(
+                content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
             await channel.send(embed=embed)
         else:
-            await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
+            await initial_message.edit(
+                content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
     else:
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
 
@@ -150,23 +160,26 @@ async def checkhistory(ctx):
         with open('seen_links.json', 'r') as file:
             seen_links = json.load(file)
 
+        # Sort the links by count, from highest to lowest
+        sorted_links = sorted(seen_links.items(), key=lambda item: item[1], reverse=True)
+
         # Prepare an embed message for nicer presentation
         embed = discord.Embed(title="Seen Links History",
-                              description="This is the list of links that have been checked along with how many times they were seen.",
+                              description="This is the list of links that have been checked along with how many times they were seen, ordered from most to least seen.",
                               color=0x3498db)  # You can change the color
 
-        if seen_links:
+        if sorted_links:
             # Limiting to show a maximum number of links due to embed field value limit
             max_links_to_show = 25
             links_shown = 0
-            for link, count in seen_links.items():
+            for link, count in sorted_links:
                 if links_shown < max_links_to_show:
                     # Adding backticks around the link to make it unclickable
-                    embed.add_field(name=f"`{link}`", value=f"Seen {count} times", inline=False)
+                    embed.add_field(name=f"`{link}`", value=f"Link seen {count} times", inline=False)
                     links_shown += 1
                 else:
                     break  # Stop adding more links to avoid hitting embed limits
-            if links_shown < len(seen_links):
+            if links_shown < len(sorted_links):
                 embed.set_footer(text=f"and more links... (showing only the first {max_links_to_show})")
         else:
             embed.description = "No links have been seen yet."

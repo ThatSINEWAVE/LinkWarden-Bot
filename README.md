@@ -12,6 +12,7 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Customizable Trusted Domain List** - With the addition of `trusted_domains.json` you can customize what domains should be scanned.
 - **Role Specific Command** - The bot wont execute commands form users that do not have the specific role listed in the `config.py` file.
 - **Link Source** - The bot will embed the message link where the scanned link was found in making moderation easier.
+- **Link History** - The bot logs all links that are sent to be scanned and keeps them for future refrence
 
 ## Getting Started
 
@@ -71,6 +72,10 @@ The bot is straightforward to use with a simple command structure. It supports t
 - **Detailed Mode**: Offers an exhaustive report with vendor-specific ratings from VirusTotal, detailed WHOIS information, and a comprehensive security report from urlscan.io.
 
 `/checklink https://example.com detailed`
+
+- **History**: Outputs a simple list of past links that were used for scans and keeps track of how many times each link was seen.
+
+`/checklhistory`
 
 ### Modes Explained
 - **SIMPLE**: Displays a concise embed with the top 10 warnings from VirusTotal, a summary of WHOIS information, and a link to the urlscan.io report.

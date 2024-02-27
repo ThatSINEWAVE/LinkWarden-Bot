@@ -1,3 +1,4 @@
-discord.py==1.7.3  # Use the latest version compatible with your bot
-requests==2.26.0  # Use the latest version compatible with your bot
-python-whois==0.7.3  # Use the latest version compatible with your bot
+py-cord==2.4.1
+discord.py==2.3.2
+requests==2.26.0
+python-whois==0.7.3

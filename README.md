@@ -49,7 +49,7 @@ This bot requires the following Python packages:
 These can be installed using pip:
 
 ```python
-pip install discord.py requests python-whois
+pip install discord.py requests python-whois py-cord
 ```
 
 Or you can install them using the requirements.txt file.

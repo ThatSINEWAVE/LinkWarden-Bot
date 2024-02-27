@@ -206,7 +206,7 @@ async def process_link_queue():
                 temp_list = list(link_queue._queue)
 
                 embed = discord.Embed(title="Current Link Queue", color=0x00FF00)
-                embed.description = "\n".join([f"{idx + 1}. `{item[0]}`" for idx, item in enumerate(temp_list)])  # Modify to access link
+                embed.description = "\n".join([f"{idx + 1}. `{item[0]}`" for idx, item in enumerate(temp_list)])
 
                 # Add a note about the cooldown in the footer
                 embed.set_footer(text="Note: There is a 1-minute cooldown between scans.")
@@ -219,12 +219,30 @@ async def process_link_queue():
         else:
             print(f"Could not find the scan channel with ID {SCAN_CHANNEL_ID}")
 
-        await asyncio.sleep(60)  # 1-minute delay before processing the next link
+        await asyncio.sleep(60)
 
+
+status_messages = [
+    "with dangerous links",
+    "Project CW",
+    "in the digital realm",
+    "Chopper",
+    "with viruses",
+    "Poker with scammers",
+    "Bug Hunt",
+]
+
+async def cycle_status():
+    while True:
+        for status in status_messages:
+            game = discord.Game(status)
+            await bot.change_presence(status=discord.Status.online, activity=game)
+            await asyncio.sleep(20)  # Change the status every 20 seconds
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    await bot.loop.create_task(cycle_status())
     await bot.loop.create_task(process_link_queue())
 
 # Setup commands

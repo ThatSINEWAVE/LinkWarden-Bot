@@ -4,8 +4,8 @@ from discord.commands import Option
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
 from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS  # Import ALLOWED_ROLE_IDS
 
+
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
-    # Check if the user has any of the allowed roles
     if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
         await ctx.respond("You do not have the required role to use this command.")
         return
@@ -92,6 +92,7 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
     else:
         # If the link could not be submitted to VirusTotal, update the initial message
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
+
 
 def setup_commands(bot, guild_ids):
     bot.slash_command(guild_ids=guild_ids, description="Checks the provided link for security threats.")(checklink)

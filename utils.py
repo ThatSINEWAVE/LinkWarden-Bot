@@ -16,7 +16,7 @@ def get_whois_info(domain):
             whois_text += f"Expiration Date: {w.expiration_date}\n"
         return whois_text
     except Exception as e:
-        print(f"Failed to fetch WHOIS info: {e}")
+        print(f"[WHOIS] RESPONSE={e}")
         return "WHOIS information could not be retrieved."
 
 
@@ -28,10 +28,10 @@ def get_analysis_report(analysis_url, headers, retries=4, delay=15):
             if report['data']['attributes']['status'] == 'completed':
                 return report
             else:
-                print(f"Analysis not completed yet, attempt {attempt + 1}/{retries}. Retrying in {delay} seconds...")
+                print(f"[VIRUSTOTAL] ATTEMPT={attempt + 1}/{retries} STATUS=RETRY_IN_{delay}_SECONDS")
                 time.sleep(delay)
         else:
-            print(f"Failed to fetch the report, status code: {report_response.status_code}")
+            print(f"[VIRUSTOTAL] REASON=FAILED_TO_FETCH_RESULTS, STATUS= {report_response.status_code}")
             break
     return None
 
@@ -44,7 +44,7 @@ def submit_to_urlscan(link):
         scan_uuid = response.json().get('uuid')
         return scan_uuid  # Return the uuid instead of the result URL
     else:
-        print(f"Failed to submit to urlscan.io, status code: {response.status_code}")
+        print(f"[URLSCAN] RESPONSE={response.status_code}")
         return None
 
 
@@ -58,6 +58,6 @@ def get_urlscan_result(scan_uuid, retries=4, delay=15):
             scan_data = response.json()
             return scan_data
         else:
-            print(f"Attempt {attempt + 1}/{retries}: Failed to fetch the scan result, status code: {response.status_code}")
+            print(f"[URLSCAN] ATTEMPT={attempt + 1}/{retries}, REASON=FAILED_TO_FETCH_RESULTS, STATUS={response.status_code}")
 
     return None

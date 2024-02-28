@@ -7,12 +7,14 @@ from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS  # Import ALLOWED_ROLE_I
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
     if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
-        await ctx.respond("You do not have the required role to use this command.")
+        await ctx.respond(f"You do not have the required role to use this command.")
+        print(f"[MANU-SCAN] REQUESTED_BY={ctx.author}, STATUS=DENIED, REASON=INVALID_ROLES")
         return
 
     # Send an initial message indicating that the analysis is starting
     initial_response = await ctx.respond(f"🔍 Analysis in progress for `{link}` in **{mode} mode**. Please wait...")
     initial_message = await initial_response.original_response()
+    print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=IN_ANALYSIS, MODE={mode}, REASON=REQUESTED_BY_USER")
 
     headers = {"x-apikey": VIRUSTOTAL_API_KEY}
     params = {'url': link}
@@ -83,15 +85,18 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
 
             # Update the initial message to indicate that the analysis is complete
             await initial_message.edit(content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
+            print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=COMPLETED, MODE={mode}, REASON=REQUESTED_BY_USER")
 
             # Send the analysis report embed
             await ctx.followup.send(embed=embed)
         else:
             # In case the analysis report couldn't be retrieved, update the message accordingly
             await initial_message.edit(content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
+            print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_SUBMIT_URL")
     else:
         # If the link could not be submitted to VirusTotal, update the initial message
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
+        print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_RETRIEVE_REPORT")
 
 
 def setup_commands(bot, guild_ids):

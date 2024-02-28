@@ -18,6 +18,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 link_queue = asyncio.Queue()
+current_queued_links = set()
 
 # Load trusted domains
 with open('trusted_domains.json', 'r') as f:
@@ -49,16 +50,32 @@ async def on_message(message):
     for url in urls:
         parsed_url = urlparse(url)
         domain = parsed_url.netloc
-
-        # Removing 'www.' prefix and port numbers from the domain
         domain = domain.replace('www.', '').split(':')[0]
 
+        # Immediately mark URL as seen to prevent race conditions
         if domain not in trusted_domains:
-            print(f"Adding {url} to the queue.")  # Debug print
-            await link_queue.put((url, message))  # Modify this line to include the message
-            update_seen_links(url)  # Update seen_links.json instead of adding to the set
+            if url not in current_queued_links:
+                current_queued_links.add(url)  # Mark as queued before async operation
+
+                try:
+                    with open('seen_links.json', 'r') as file:
+                        seen_links = json.load(file)
+                except FileNotFoundError:
+                    seen_links = {}
+
+                seen_before = seen_links.get(url, 0) > 0
+
+                if not seen_before or (seen_before):
+                    print(f"[QUEUE] URL={url}, SENT_BY={message.author}, STATUS=ADDED, REASON=NOT_PROCESSED")
+                    await link_queue.put((url, message))
+                    update_seen_links(url)
+                else:
+                    current_queued_links.discard(url)  # Remove from set if not queuing
+            else:
+                print(f"[QUEUE] URL={url}, SENT_BY={message.author}, STATUS=SKIPPED, REASON=IN_PROCESS")
         else:
-            print(f"Skipping {url} as it's from a trusted domain.")  # Debug print
+            print(f"[QUEUE] URL={url}, SENT_BY={message.author}, STATUS=SKIPPED, REASON=TRUSTED_DOMAIN")
+            current_queued_links.discard(url)  # Ensure cleanup if not adding to queue
 
     await bot.process_commands(message)
 
@@ -75,7 +92,7 @@ async def checklink_scan(channel, link, message):
 
     mode = "simple"  # Set mode to simple
     initial_message = await channel.send(f"🔍 Starting analysis for `{link}` in **{mode} mode**. Please wait...")
-
+    print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=IN_ANALYSIS, MODE={mode}, REASON=SENT_BY_USER")
     headers = {"x-apikey": VIRUSTOTAL_API_KEY}
     params = {'url': link}
     vt_response = requests.post('https://www.virustotal.com/api/v3/urls', headers=headers, data=params)
@@ -140,12 +157,15 @@ async def checklink_scan(channel, link, message):
 
             await initial_message.edit(
                 content=f"✅ Analysis for `{link}` in **{mode} mode** was completed. Please check the message below.")
+            print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=COMPLETED, MODE={mode}")
             await channel.send(embed=embed)
         else:
             await initial_message.edit(
                 content=f"❌ Failed to retrieve the analysis report for `{link}`. Please try again later.")
+            print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_RETRIEVE_REPORT")
     else:
         await initial_message.edit(content=f"❌ Failed to submit the URL `{link}` to VirusTotal for scanning.")
+        print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_SUBMIT_URL")
 
 
 @bot.slash_command(description="Check the history of scanned URLs", guild_ids=guild_ids)
@@ -153,6 +173,7 @@ async def checkhistory(ctx):
     # Check if the user has any of the allowed roles
     if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
         await ctx.respond("You do not have the required role to use this command.")
+        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=DENIED, REASON=INVALID_ROLES")
         return
 
     try:
@@ -166,7 +187,8 @@ async def checkhistory(ctx):
         # Prepare an embed message for nicer presentation
         embed = discord.Embed(title="Seen Links History",
                               description="This is the list of links that have been checked along with how many times they were seen, ordered from most to least seen.",
-                              color=0x3498db)  # You can change the color
+                              color=0x3498db)
+        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=ALLOWED, REASON=VALID_ROLES")
 
         if sorted_links:
             # Limiting to show a maximum number of links due to embed field value limit
@@ -180,7 +202,7 @@ async def checkhistory(ctx):
                 else:
                     break  # Stop adding more links to avoid hitting embed limits
             if links_shown < len(sorted_links):
-                embed.set_footer(text=f"and more links... (showing only the first {max_links_to_show})")
+                embed.set_footer(text=f"Showing the top {max_links_to_show} by usage")
         else:
             embed.description = "No links have been seen yet."
 
@@ -192,58 +214,68 @@ async def checkhistory(ctx):
 
 async def process_link_queue():
     while True:
-        link, message = await link_queue.get()  # Modify this line to unpack message
+        link, message = await link_queue.get()
 
         # Use SCAN_CHANNEL_ID from the config
         scan_channel = bot.get_channel(SCAN_CHANNEL_ID)
 
         if scan_channel:
-            await checklink_scan(scan_channel, link, message)  # Pass the message here
+            await checklink_scan(scan_channel, link, message)
+            # Use discard instead of remove to avoid KeyError
+            current_queued_links.discard(link)
 
             # Check the size of the queue after the scan is completed
-            if link_queue.qsize() > 0:  # Check if there are more links in the queue
+            if link_queue.qsize() > 0:
                 # Access the queue's internal storage to read items without removing them
                 temp_list = list(link_queue._queue)
 
                 embed = discord.Embed(title="Current Link Queue", color=0x00FF00)
                 embed.description = "\n".join([f"{idx + 1}. `{item[0]}`" for idx, item in enumerate(temp_list)])
-
-                # Add a note about the cooldown in the footer
                 embed.set_footer(text="Note: There is a 1-minute cooldown between scans.")
 
                 # Truncate if exceeds max length limit
-                if len(embed.description) > 4096 - len(embed.footer.text) - 2:  # Adjusting for footer length
+                if len(embed.description) > 4096 - len(embed.footer.text) - 2:
                     embed.description = embed.description[:4093 - len(embed.footer.text) - 2] + "..."
 
                 await scan_channel.send(embed=embed)
         else:
-            print(f"Could not find the scan channel with ID {SCAN_CHANNEL_ID}")
+            print(f"[ERROR] STATUS=FAILED, REASON=CHANNEL_{SCAN_CHANNEL_ID}_COULD_NOT_BE_FOUND")
 
         await asyncio.sleep(60)
 
 
-status_messages = [
-    "with dangerous links",
-    "Project CW",
-    "in the digital realm",
-    "Chopper",
-    "with viruses",
-    "Poker with scammers",
-    "Bug Hunt",
-]
+async def cycle_status_messages():
+    status_messages = [
+        discord.Game("with dangerous links"),
+        discord.Activity(type=discord.ActivityType.listening, name="your conversations"),
+        discord.Game("Project CW"),
+        discord.Activity(type=discord.ActivityType.watching, name="your chat"),
+        discord.Game("with viruses"),
+        discord.Activity(type=discord.ActivityType.listening, name="PCW Menu Music"),
+        discord.Game("Poker with scammers"),
+        discord.Activity(type=discord.ActivityType.watching, name="#cw-discussion"),
+        discord.Game("World of Tanks"),
+        discord.Activity(type=discord.ActivityType.listening, name="yappers"),
+        discord.Game("*Bug Hunting*"),
+        discord.Activity(type=discord.ActivityType.watching, name="out for cope"),
+        discord.Game("War Thunder"),
+        discord.Activity(type=discord.ActivityType.listening, name="podcasts"),
+        discord.Game("Brimstone"),
+        discord.Activity(type=discord.ActivityType.watching, name="out for NSFW Servers"),
+    ]
 
-async def cycle_status():
     while True:
         for status in status_messages:
-            game = discord.Game(status)
-            await bot.change_presence(status=discord.Status.online, activity=game)
-            await asyncio.sleep(20)  # Change the status every 20 seconds
+            await bot.change_presence(activity=status)
+            await asyncio.sleep(30)  # Adjust the sleep time as needed
+
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-    await bot.loop.create_task(cycle_status())
-    await bot.loop.create_task(process_link_queue())
+    print(f'[BOT] BOT={bot.user}, STATUS=CONNECTED')
+    asyncio.create_task(process_link_queue())
+    asyncio.create_task(cycle_status_messages())
+
 
 # Setup commands
 setup_commands(bot, guild_ids)

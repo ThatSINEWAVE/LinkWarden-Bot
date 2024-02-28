@@ -13,6 +13,8 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Role Specific Command** - The bot wont execute commands form users that do not have the specific role listed in the `config.py` file.
 - **Link Source** - The bot will embed the message link where the scanned link was found in making moderation easier.
 - **Link History** - The bot logs all links that are sent to be scanned and keeps them for future refrence
+- **Customizable Status** - Custom status messages built-in.
+- **Clean Console** - Custom print messages for every action and interaction with the bot.
 
 ## Getting Started
 

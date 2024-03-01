@@ -1,4 +1,4 @@
-# LinkWarden - Discord Bot
+# LinkWarden - Discord Link Scanner Bot
 
 This Discord bot, designed for personal and community use, enhances server security by scrutinizing links shared within Discord channels. It leverages the VirusTotal API, WHOIS lookups, and urlscan.io scans to provide comprehensive real-time analysis, helping maintain a safe online environment for members.
 

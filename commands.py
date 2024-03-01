@@ -1,8 +1,9 @@
 import discord
 import requests
+import json
 from discord.commands import Option
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS  # Import ALLOWED_ROLE_IDS
+from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS, SCAN_CHANNEL_ID
 
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
@@ -99,5 +100,49 @@ async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Opt
         print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_RETRIEVE_REPORT")
 
 
+async def checkhistory(ctx):
+    # Check if the user has any of the allowed roles
+    if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
+        await ctx.respond("You do not have the required role to use this command.")
+        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=DENIED, REASON=INVALID_ROLES")
+        return
+
+    try:
+        # Load seen links from file
+        with open('seen_links.json', 'r') as file:
+            seen_links = json.load(file)
+
+        # Sort the links by count, from highest to lowest
+        sorted_links = sorted(seen_links.items(), key=lambda item: item[1], reverse=True)
+
+        # Prepare an embed message for nicer presentation
+        embed = discord.Embed(title="Seen Links History",
+                              description="This is the list of links that have been checked along with how many times they were seen, ordered from most to least seen.",
+                              color=0x3498db)
+        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=ALLOWED, REASON=VALID_ROLES")
+
+        if sorted_links:
+            # Limiting to show a maximum number of links due to embed field value limit
+            max_links_to_show = 25
+            links_shown = 0
+            for link, count in sorted_links:
+                if links_shown < max_links_to_show:
+                    # Adding backticks around the link to make it unclickable
+                    embed.add_field(name=f"`{link}`", value=f"Link seen {count} times", inline=False)
+                    links_shown += 1
+                else:
+                    break  # Stop adding more links to avoid hitting embed limits
+            if links_shown < len(sorted_links):
+                embed.set_footer(text=f"Showing the top {max_links_to_show} by usage")
+        else:
+            embed.description = "No links have been seen yet."
+
+        # Send the embed message to the user
+        await ctx.respond(embed=embed)
+    except FileNotFoundError:
+        await ctx.respond("The seen links history is currently empty.")
+
+
 def setup_commands(bot, guild_ids):
     bot.slash_command(guild_ids=guild_ids, description="Checks the provided link for security threats.")(checklink)
+    bot.slash_command(guild_ids=guild_ids, description="Check the history of scanned URLs")(checkhistory)

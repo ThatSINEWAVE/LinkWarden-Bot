@@ -7,7 +7,7 @@ from discord.ext import commands
 from config import TOKEN, guild_ids
 from commands import setup_commands
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID, ALLOWED_ROLE_IDS
+from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID
 from urllib.parse import urlparse
 
 # Enable intents
@@ -168,50 +168,6 @@ async def checklink_scan(channel, link, message):
         print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=FAILED, MODE={mode}, REASON=FAILED_TO_SUBMIT_URL")
 
 
-@bot.slash_command(description="Check the history of scanned URLs", guild_ids=guild_ids)
-async def checkhistory(ctx):
-    # Check if the user has any of the allowed roles
-    if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
-        await ctx.respond("You do not have the required role to use this command.")
-        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=DENIED, REASON=INVALID_ROLES")
-        return
-
-    try:
-        # Load seen links from file
-        with open('seen_links.json', 'r') as file:
-            seen_links = json.load(file)
-
-        # Sort the links by count, from highest to lowest
-        sorted_links = sorted(seen_links.items(), key=lambda item: item[1], reverse=True)
-
-        # Prepare an embed message for nicer presentation
-        embed = discord.Embed(title="Seen Links History",
-                              description="This is the list of links that have been checked along with how many times they were seen, ordered from most to least seen.",
-                              color=0x3498db)
-        print(f"[HISTORY] REQUESTED_BY={ctx.author}, REQUESTED_IN={SCAN_CHANNEL_ID}, STATUS=ALLOWED, REASON=VALID_ROLES")
-
-        if sorted_links:
-            # Limiting to show a maximum number of links due to embed field value limit
-            max_links_to_show = 25
-            links_shown = 0
-            for link, count in sorted_links:
-                if links_shown < max_links_to_show:
-                    # Adding backticks around the link to make it unclickable
-                    embed.add_field(name=f"`{link}`", value=f"Link seen {count} times", inline=False)
-                    links_shown += 1
-                else:
-                    break  # Stop adding more links to avoid hitting embed limits
-            if links_shown < len(sorted_links):
-                embed.set_footer(text=f"Showing the top {max_links_to_show} by usage")
-        else:
-            embed.description = "No links have been seen yet."
-
-        # Send the embed message to the user
-        await ctx.respond(embed=embed)
-    except FileNotFoundError:
-        await ctx.respond("The seen links history is currently empty.")
-
-
 async def process_link_queue():
     while True:
         link, message = await link_queue.get()
@@ -246,22 +202,36 @@ async def process_link_queue():
 
 async def cycle_status_messages():
     status_messages = [
-        discord.Game("with dangerous links"),
+        discord.Game(name="with dangerous links"),
         discord.Activity(type=discord.ActivityType.listening, name="your conversations"),
-        discord.Game("Project CW"),
+        discord.Game(name="Project CW"),
         discord.Activity(type=discord.ActivityType.watching, name="your chat"),
-        discord.Game("with viruses"),
+        discord.Game(name="with viruses"),
+        discord.Activity(type=discord.ActivityType.competing, name="tournaments"),
+        discord.Game(name="dead"),
         discord.Activity(type=discord.ActivityType.listening, name="PCW Menu Music"),
-        discord.Game("Poker with scammers"),
+        discord.Game(name="poker with scammers"),
         discord.Activity(type=discord.ActivityType.watching, name="#cw-discussion"),
-        discord.Game("World of Tanks"),
-        discord.Activity(type=discord.ActivityType.listening, name="yappers"),
-        discord.Game("*Bug Hunting*"),
-        discord.Activity(type=discord.ActivityType.watching, name="out for cope"),
-        discord.Game("War Thunder"),
+        discord.Game(name="with fire"),
+        discord.Activity(type=discord.ActivityType.competing, name="leaderboard"),
+        discord.Game(name="with source code"),
+        discord.Activity(type=discord.ActivityType.listening, name="your feedback"),
+        discord.Game(name="*Bug Hunting*"),
+        discord.Activity(type=discord.ActivityType.watching, name="scammers"),
+        discord.Game(name="hide and seek"),
+        discord.Activity(type=discord.ActivityType.competing, name="the chat"),
+        discord.Game(name="with APIs"),
         discord.Activity(type=discord.ActivityType.listening, name="podcasts"),
-        discord.Game("Brimstone"),
+        discord.Game(name="Brimstone"),
         discord.Activity(type=discord.ActivityType.watching, name="out for NSFW Servers"),
+        discord.Game(name="nothing, im a bot"),
+        discord.Activity(type=discord.ActivityType.competing, name="life"),
+        discord.Game(name="with keyboard"),
+        discord.Activity(type=discord.ActivityType.listening, name="SINEWAVE"),
+        discord.Game(name="<REDACTED>"),
+        discord.Activity(type=discord.ActivityType.watching, name="#off-topic"),
+        discord.Game(name="with leaks"),
+        discord.Activity(type=discord.ActivityType.competing, name="time"),
     ]
 
     while True:

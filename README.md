@@ -16,6 +16,8 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Customizable Status** - Custom status messages built-in.
 - **Clean Console** - Custom print messages for every action and interaction with the bot.
 
+## ☕ [Support my work on Ko-Fi](https://ko-fi.com/thatsinewave)
+
 ## Getting Started
 
 Before you can use the bot, you'll need to set it up with your Discord server and configure it with your API keys.

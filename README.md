@@ -1,6 +1,10 @@
+<div align="center">
+
 # LinkWarden - Discord Link Scanner Bot
 
 This Discord bot, designed for personal and community use, enhances server security by scrutinizing links shared within Discord channels. It leverages the VirusTotal API, WHOIS lookups, and urlscan.io scans to provide comprehensive real-time analysis, helping maintain a safe online environment for members.
+
+</div>
 
 ## Features
 
@@ -16,7 +20,11 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Customizable Status** - Custom status messages built-in.
 - **Clean Console** - Custom print messages for every action and interaction with the bot.
 
+<div align="center">
+
 ## ☕ [Support my work on Ko-Fi](https://ko-fi.com/thatsinewave)
+
+</div>
 
 ## Getting Started
 

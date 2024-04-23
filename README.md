@@ -36,6 +36,12 @@ Before you can use the bot, you'll need to set it up with your Discord server an
 - Python 3.6 or higher.
 - API keys for VirusTotal and urlscan.io (available from their respective websites).
 
+<div align="center">
+
+# [Join my discord server](https://discord.gg/2nHHHBWNDw)
+
+</div>
+
 ### Installation
 
 1. Clone this repository to your local machine.

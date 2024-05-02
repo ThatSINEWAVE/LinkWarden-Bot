@@ -1,12 +1,23 @@
+import re
 import discord
 import requests
 import json
 from discord.commands import Option
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS, SCAN_CHANNEL_ID, MAX_URL_LENGTH
+from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS, SCAN_CHANNEL_ID, MAX_URL_LENGTH, ALLOWED_CHARS_REGEX
 
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
+    # Add http:// prefix if missing
+    if not link.startswith("http://") and not link.startswith("https://"):
+        link = "http://" + link
+
+    # Check if the URL contains only allowed characters
+    if not re.match(ALLOWED_CHARS_REGEX, link):
+        await ctx.respond(f"The provided URL contains invalid characters. Only standard English characters are allowed.")
+        print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=DENIED, REASON=INVALID_CHARACTERS")
+        return
+
     # Check if the URL length exceeds the maximum allowed
     if len(link) > MAX_URL_LENGTH:
         await ctx.respond(f"The provided URL is too long to be processed safely. Maximum allowed length is {MAX_URL_LENGTH} characters.")

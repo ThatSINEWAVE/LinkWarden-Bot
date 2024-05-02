@@ -61,14 +61,13 @@ ALLOWED_ROLE_IDS = [MOD_ROLE_ID_GOES_HERE]
 ### Dependencies
 
 This bot requires the following Python packages:
-- discord.py
 - py-cord
 - requests
 - python-whois
 These can be installed using pip:
 
 ```python
-pip install discord.py requests python-whois py-cord
+pip install py-cord requests python-whois
 ```
 
 Or you can install them using the requirements.txt file.

@@ -118,7 +118,8 @@ The bot is straightforward to use with a simple command structure. It supports t
 
 ### Contributors
 
-- **Cazaira** - helped refine and make the `trusted_domains.json` file stronger against false positives
+- **Cazaira** - helped refine and make the `trusted_domains.json` file stronger against false positives.
+- **[Nitrrine](https://github.com/Nitrrine)** - Discovered a critical bug that caused the bot to crash on certain links.
 
 ## License
 

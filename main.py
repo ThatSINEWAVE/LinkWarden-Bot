@@ -7,7 +7,7 @@ from discord.ext import commands
 from config import TOKEN, guild_ids
 from commands import setup_commands
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID
+from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID, MAX_URL_LENGTH
 from urllib.parse import urlparse
 
 # Enable intents
@@ -48,6 +48,11 @@ async def on_message(message):
     urls = re.findall(url_regex, message.content)
 
     for url in urls:
+        # Check if the URL length exceeds the maximum allowed
+        if len(url) > MAX_URL_LENGTH:
+            print(f"[QUEUE] URL={url}, SENT_BY={message.author}, STATUS=SKIPPED, REASON=URL_TOO_LONG")
+            continue  # Skip processing this URL
+
         parsed_url = urlparse(url)
         domain = parsed_url.netloc
         domain = domain.replace('www.', '').split(':')[0]
@@ -81,6 +86,11 @@ async def on_message(message):
 
 
 async def checklink_scan(channel, link, message):
+    # Check if the URL length exceeds the maximum allowed
+    if len(link) > MAX_URL_LENGTH:
+        print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=SKIPPED, REASON=URL_TOO_LONG")
+        return  # Skip processing this URL
+
     with open('seen_links.json', 'r') as file:
         seen_links = json.load(file)
 

@@ -3,13 +3,14 @@ import requests
 import json
 from discord.commands import Option
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS, SCAN_CHANNEL_ID
+from config import VIRUSTOTAL_API_KEY, ALLOWED_ROLE_IDS, SCAN_CHANNEL_ID, MAX_URL_LENGTH
 
 
 async def checklink(ctx, link: Option(str, "Enter the link to check"), mode: Option(str, "Choose 'simple' or 'detailed' mode", choices=["simple", "detailed"]) = "simple"):
-    if not any(role.id in ALLOWED_ROLE_IDS for role in ctx.author.roles):
-        await ctx.respond(f"You do not have the required role to use this command.")
-        print(f"[MANU-SCAN] REQUESTED_BY={ctx.author}, STATUS=DENIED, REASON=INVALID_ROLES")
+    # Check if the URL length exceeds the maximum allowed
+    if len(link) > MAX_URL_LENGTH:
+        await ctx.respond(f"The provided URL is too long to be processed safely. Maximum allowed length is {MAX_URL_LENGTH} characters.")
+        print(f"[MANU-SCAN] URL={link}, SENT_BY_USER={ctx.author}, STATUS=DENIED, REASON=URL_TOO_LONG")
         return
 
     # Send an initial message indicating that the analysis is starting
@@ -128,7 +129,10 @@ async def checkhistory(ctx):
             for link, count in sorted_links:
                 if links_shown < max_links_to_show:
                     # Adding backticks around the link to make it unclickable
-                    embed.add_field(name=f"`{link}`", value=f"Link seen {count} times", inline=False)
+                    field_name = f"`{link}`"
+                    if len(field_name) > 256:
+                        field_name = field_name[:253] + "..."
+                    embed.add_field(name=field_name, value=f"Link seen {count} times", inline=False)
                     links_shown += 1
                 else:
                     break  # Stop adding more links to avoid hitting embed limits

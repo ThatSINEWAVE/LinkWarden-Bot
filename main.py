@@ -4,10 +4,9 @@ import asyncio
 import requests
 import json
 from discord.ext import commands
-from config import TOKEN, guild_ids
 from commands import setup_commands
 from utils import get_whois_info, get_analysis_report, submit_to_urlscan, get_urlscan_result
-from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID, MAX_URL_LENGTH
+from config import VIRUSTOTAL_API_KEY, SCAN_CHANNEL_ID, MAX_URL_LENGTH, TOKEN, guild_ids, ALLOWED_CHARS_REGEX
 from urllib.parse import urlparse
 
 # Enable intents
@@ -86,6 +85,15 @@ async def on_message(message):
 
 
 async def checklink_scan(channel, link, message):
+    # Add http:// prefix if missing
+    if not link.startswith("http://") and not link.startswith("https://"):
+        link = "http://" + link
+
+    # Check if the URL contains only allowed characters
+    if not re.match(ALLOWED_CHARS_REGEX, link):
+        print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=SKIPPED, REASON=INVALID_CHARACTERS")
+        return
+
     # Check if the URL length exceeds the maximum allowed
     if len(link) > MAX_URL_LENGTH:
         print(f"[AUTO-SCAN] URL={link}, SENT_BY_USER={message.author}, STATUS=SKIPPED, REASON=URL_TOO_LONG")

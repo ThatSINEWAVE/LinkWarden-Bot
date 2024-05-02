@@ -14,9 +14,9 @@ This Discord bot, designed for personal and community use, enhances server secur
 - **Ease of use**: The bot will embed a screenshot of the link sent for checking right in the chat in both scanning modes, simple or detailed.
 - **Automatic Link Scans**: The bot will look for links sent across the server and scan them automatically if they are not from a trusted domain.
 - **Customizable Trusted Domain List** - With the addition of `trusted_domains.json` you can customize what domains should be scanned.
-- **Role Specific Command** - The bot wont execute commands form users that do not have the specific role listed in the `config.py` file.
+- **Role Specific Command** - The bot won't execute commands form users that do not have the specific role listed in the `config.py` file.
 - **Link Source** - The bot will embed the message link where the scanned link was found in making moderation easier.
-- **Link History** - The bot logs all links that are sent to be scanned and keeps them for future refrence
+- **Link History** - The bot logs all links that are sent to be scanned and keeps them for future reference
 - **Customizable Status** - Custom status messages built-in.
 - **Clean Console** - Custom print messages for every action and interaction with the bot.
 
@@ -97,7 +97,7 @@ The bot is straightforward to use with a simple command structure. It supports t
 
 ### Modes Explained
 - **SIMPLE**: Displays a concise embed with the top 10 warnings from VirusTotal, a summary of WHOIS information, and a link to the urlscan.io report.
-- **DETAILED**: Presents a comprehensive report, marking each vendor with a color-coded dot as per the legend below, along with detailed WHOIS information and a urlscan.io security report.
+- **DETAILED**: Presents a comprehensive report, marking each vendor with a color-coded dot as per the legend below, along with detailed WHOIS information and an urlscan.io security report.
 
 ### Status Dots Legend
 
